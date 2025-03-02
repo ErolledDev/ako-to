@@ -89,7 +89,7 @@ function App() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'widget_settings' }, 
         payload => {
-          if (payload.new && user && payload.new.user_id === user.id) {
+          if (payload.new && user && payload.new && typeof payload.new === 'object' && 'user_id' in payload.new && payload.new.user_id === user.id) {
             setWidgetSettings(payload.new);
           }
         }
@@ -121,7 +121,7 @@ function App() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'ai_settings' }, 
         payload => {
-          if (payload.new && user && payload.new.user_id === user.id) {
+          if (payload.new && user && payload.new && typeof payload.new === 'object' && 'user_id' in payload.new && payload.new.user_id === user.id) {
             setAiSettings(payload.new);
           }
         }
@@ -156,13 +156,16 @@ function App() {
         .eq('user_id', userId)
         .maybeSingle();
       
-      setWidgetSettings(settingsData || {
+      const defaultSettings = {
         business_name: '',
         sales_representative: '',
         welcome_message: 'Hello! How can I help you today?',
         primary_color: '#4f46e5',
-        secondary_color: '#ffffff'
-      });
+        secondary_color: '#ffffff',
+        user_id: userId
+      };
+      
+      setWidgetSettings(settingsData || defaultSettings);
       
       return settingsData;
     } catch (error) {
@@ -211,12 +214,15 @@ function App() {
         .eq('user_id', userId)
         .maybeSingle();
       
-      setAiSettings(aiSettingsData || {
+      const defaultAiSettings = {
         is_enabled: false,
         api_key: '',
         model: 'gpt-3.5-turbo',
-        context_info: ''
-      });
+        context_info: '',
+        user_id: userId
+      };
+      
+      setAiSettings(aiSettingsData || defaultAiSettings);
       
       return aiSettingsData;
     } catch (error) {
