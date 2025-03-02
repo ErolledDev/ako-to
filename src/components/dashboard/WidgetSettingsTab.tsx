@@ -124,14 +124,6 @@ const WidgetSettingsTab = () => {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Widget Settings</h2>
-        <button
-          onClick={copyWidgetCode}
-          className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors"
-          style={{ backgroundColor: colorScheme }}
-        >
-          <Copy size={18} className="mr-2" />
-          {codeCopied ? 'Copied!' : 'Copy Widget Code'}
-        </button>
       </div>
       
       {error && (
@@ -256,7 +248,17 @@ const WidgetSettingsTab = () => {
       </div>
       
       <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800 mb-2">Widget Installation</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-medium text-gray-800">Widget Installation</h3>
+          <button
+            onClick={copyWidgetCode}
+            className="flex items-center px-3 py-1 text-white rounded-md hover:opacity-90 transition-colors"
+            style={{ backgroundColor: colorScheme }}
+          >
+            <Copy size={16} className="mr-2" />
+            {codeCopied ? 'Copied!' : 'Copy Code'}
+          </button>
+        </div>
         <p className="text-sm text-gray-600 mb-3">
           Copy and paste this code just before the closing <code>&lt;/body&gt;</code> tag on your website:
         </p>
