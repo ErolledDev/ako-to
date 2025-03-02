@@ -24,6 +24,14 @@ export default defineConfig({
       }
     },
     sourcemap: false,
-    minify: true
+    minify: true,
+    // Ensure the chat.js is built as IIFE (Immediately Invoked Function Expression)
+    // This makes it work as a regular script tag without module requirements
+    lib: {
+      entry: 'src/widget/chat.ts',
+      name: 'BusinessChatWidget',
+      formats: ['iife'],
+      fileName: () => 'chat.js'
+    }
   }
 });

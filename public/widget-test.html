@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Chat Widget Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #4f46e5;
+    }
+    .demo-section {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    pre {
+      background-color: #f3f4f6;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    .copy-btn {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .copy-btn:hover {
+      background-color: #4338ca;
+    }
+  </style>
+</head>
+<body>
+  <h1>Business Chat Widget Test Page</h1>
+  
+  <p>This page demonstrates the Business Chat Widget integration. You should see a chat button in the bottom right corner of the page.</p>
+  
+  <div class="demo-section">
+    <h2>How to Add to Your Website</h2>
+    <p>Copy and paste the following code just before the closing <code>&lt;/body&gt;</code> tag on your website:</p>
+    
+    <pre><code>&lt;script src="https://widget-chat-app.netlify.app/chat.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  new BusinessChatPlugin({
+    uid: 'YOUR_USER_ID'
+  });
+&lt;/script&gt;</code></pre>
+    
+    <button class="copy-btn" onclick="copyCode()">Copy Code</button>
+  </div>
+  
+  <div class="demo-section">
+    <h2>Configuration Options</h2>
+    <p>The widget accepts the following configuration options:</p>
+    <ul>
+      <li><strong>uid</strong> (required): Your user ID from the dashboard</li>
+      <li><strong>position</strong> (optional): Where to position the widget. Options: 'bottom-right' (default), 'bottom-left', 'top-right', 'top-left'</li>
+    </ul>
+    
+    <p>Example with all options:</p>
+    <pre><code>&lt;script src="https://widget-chat-app.netlify.app/chat.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  new BusinessChatPlugin({
+    uid: 'YOUR_USER_ID',
+    position: 'bottom-left'
+  });
+&lt;/script&gt;</code></pre>
+  </div>
+
+  <!-- Load the widget -->
+  <script>
+    function copyCode() {
+      const code = `<script src="https://widget-chat-app.netlify.app/chat.js"><\/script>
+<script>
+  new BusinessChatPlugin({
+    uid: 'YOUR_USER_ID'
+  });
+<\/script>`;
+      
+      navigator.clipboard.writeText(code)
+        .then(() => alert('Code copied to clipboard!'))
+        .catch(err => console.error('Failed to copy: ', err));
+    }
+  </script>
+  
+  <!-- Load the widget for this demo page -->
+  <script src="/chat.js"></script>
+  <script>
+    // Wait for the script to load
+    setTimeout(() => {
+      if (typeof BusinessChatPlugin === 'function') {
+        new BusinessChatPlugin({
+          uid: '00000000-0000-0000-0000-000000000000' // Demo user ID
+        });
+      } else {
+        console.error('BusinessChatPlugin not loaded correctly');
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
