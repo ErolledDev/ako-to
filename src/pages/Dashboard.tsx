@@ -7,37 +7,24 @@ import {
   Bot, 
   Zap, 
   Users, 
-  Copy, 
   LogOut,
   Menu,
   X,
   Code
 } from 'lucide-react';
 import { AppContext } from '../App';
-import { ChromePicker } from 'react-color';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useContext(AppContext);
-  const [widgetCode, setWidgetCode] = useState<string>('');
-  const [codeCopied, setCodeCopied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [colorScheme, setColorScheme] = useState('#4f46e5');
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [widgetSettings, setWidgetSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      setWidgetCode(`<script src="https://widget-chat-app.netlify.app/chat.js"></script>
-<script>
-  new BusinessChatPlugin({
-    uid: '${user.id}'
-  });
-</script>`);
-      
       fetchWidgetSettings();
     }
     
@@ -75,7 +62,6 @@ const Dashboard = () => {
       }
       
       if (data) {
-        setWidgetSettings(data);
         setColorScheme(data.primary_color);
       }
     } catch (error) {
@@ -88,33 +74,6 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/');
-  };
-
-  const copyWidgetCode = () => {
-    navigator.clipboard.writeText(widgetCode);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
-  };
-
-  const handleColorChange = async (color: any) => {
-    setColorScheme(color.hex);
-    
-    if (!widgetSettings) return;
-    
-    try {
-      const { error } = await supabase
-        .from('widget_settings')
-        .update({
-          primary_color: color.hex
-        })
-        .eq('user_id', user?.id);
-      
-      if (error) {
-        console.error('Error updating color scheme:', error);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
   };
 
   const tabs = [
@@ -144,31 +103,6 @@ const Dashboard = () => {
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Business Chat Dashboard</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <button
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                className="flex items-center px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50"
-                style={{ color: colorScheme }}
-              >
-                <span className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: colorScheme }}></span>
-                Theme
-              </button>
-              {showColorPicker && (
-                <div className="absolute right-0 mt-2 z-10">
-                  <div 
-                    className="fixed inset-0" 
-                    onClick={() => setShowColorPicker(false)}
-                  ></div>
-                  <div className="relative">
-                    <ChromePicker 
-                      color={colorScheme} 
-                      onChange={handleColorChange}
-                      disableAlpha
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
             <button
               onClick={handleSignOut}
               className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
@@ -191,23 +125,8 @@ const Dashboard = () => {
           style={{ marginTop: isMobile ? '64px' : '0' }}
         >
           <div className="h-full flex flex-col">
-            <div className="p-4 border-b border-gray-200">
-              <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
-                <h3 className="text-sm font-medium mb-2 text-gray-700">Widget Code</h3>
-                <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">{widgetCode}</pre>
-                <button
-                  onClick={copyWidgetCode}
-                  className="flex items-center mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm w-full justify-center"
-                  style={{ backgroundColor: colorScheme, color: 'white' }}
-                >
-                  <Copy size={14} className="mr-1" />
-                  {codeCopied ? 'Copied!' : 'Copy Code'}
-                </button>
-              </div>
-            </div>
-            
-            <nav className="flex-1 overflow-y-auto py-4">
-              <ul className="space-y-1 px-2">
+            <nav className="flex-1 overflow-y-auto py-6">
+              <ul className="space-y-2 px-3">
                 {tabs.map((tab) => (
                   <li key={tab.path}>
                     <Link
@@ -241,7 +160,7 @@ const Dashboard = () => {
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <Outlet context={{ colorScheme }} />
           </div>
         </main>
