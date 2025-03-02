@@ -273,7 +273,7 @@ const AutoReplyTab = () => {
               
               {currentReply.keywords.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {currentReply.keywords.map((keyword, index) => (
+                  {currentReply.keywords.map((keyword: string, index: number) => (
                     <div key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center">
                       <span>{keyword}</span>
                       <button
@@ -394,7 +394,7 @@ const AutoReplyTab = () => {
                 <tr key={reply.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
-                      {reply.keywords.map((keyword, index) => (
+                      {reply.keywords.map((keyword: string, index: number) => (
                         <span key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
                           {keyword}
                         </span>

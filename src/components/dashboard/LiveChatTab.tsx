@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { MessageSquare, User, Clock, RefreshCw, X, Send } from 'lucide-react';
+import { MessageSquare, User, Clock, RefreshCw, Send } from 'lucide-react';
 import { AppContext } from '../../App';
 
 type ChatMessage = {
@@ -17,8 +17,7 @@ const LiveChatTab = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+  const [refreshInterval] = useState<number>(30); // seconds
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesSubscription = useRef<any>(null);
@@ -39,7 +38,7 @@ const LiveChatTab = () => {
         messagesSubscription.current.unsubscribe();
       }
     };
-  }, [refreshInterval]);
+  }, [refreshInterval, refreshData]);
 
   useEffect(() => {
     if (selectedSession) {
@@ -74,7 +73,6 @@ const LiveChatTab = () => {
       setMessages(data || []);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
-      setError(error.message);
     }
   };
 
@@ -136,9 +134,8 @@ const LiveChatTab = () => {
       
       setReplyText('');
       // No need to refresh all data, the subscription will handle the new message
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error sending reply:', error);
-      setError(error.message);
     } finally {
       setSending(false);
     }
@@ -172,9 +169,8 @@ const LiveChatTab = () => {
         setSelectedSession(null);
         setMessages([]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error closing session:', error);
-      setError(error.message);
     }
   };
 

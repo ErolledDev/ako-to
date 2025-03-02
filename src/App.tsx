@@ -328,8 +328,7 @@ function App() {
       }
       
       // Update local state immediately for better UX
-      setWidgetSettings(prev => ({...prev, ...settings}));
-      return true;
+      setWidgetSettings((prev: any) => ({...prev, ...settings}));
     } catch (error) {
       console.error('Error updating widget settings:', error);
       throw error;
@@ -353,8 +352,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAutoReplies(prev => [data, ...prev]);
-      return data;
+      setAutoReplies((prev: any[]) => [data, ...prev]);
     } catch (error) {
       console.error('Error adding auto reply:', error);
       throw error;
@@ -375,8 +373,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAutoReplies(prev => prev.map(item => item.id === id ? data : item));
-      return data;
+      setAutoReplies((prev: any[]) => prev.map(item => item.id === id ? data : item));
     } catch (error) {
       console.error('Error updating auto reply:', error);
       throw error;
@@ -395,8 +392,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAutoReplies(prev => prev.filter(item => item.id !== id));
-      return true;
+      setAutoReplies((prev: any[]) => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error('Error deleting auto reply:', error);
       throw error;
@@ -420,8 +416,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAdvancedReplies(prev => [data, ...prev]);
-      return data;
+      setAdvancedReplies((prev: any[]) => [data, ...prev]);
     } catch (error) {
       console.error('Error adding advanced reply:', error);
       throw error;
@@ -442,8 +437,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAdvancedReplies(prev => prev.map(item => item.id === id ? data : item));
-      return data;
+      setAdvancedReplies((prev: any[]) => prev.map(item => item.id === id ? data : item));
     } catch (error) {
       console.error('Error updating advanced reply:', error);
       throw error;
@@ -462,8 +456,7 @@ function App() {
       if (error) throw error;
       
       // Update local state immediately
-      setAdvancedReplies(prev => prev.filter(item => item.id !== id));
-      return true;
+      setAdvancedReplies((prev: any[]) => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error('Error deleting advanced reply:', error);
       throw error;
@@ -498,8 +491,7 @@ function App() {
       }
       
       // Update local state immediately
-      setAiSettings(prev => ({...prev, ...settings}));
-      return true;
+      setAiSettings((prev: any) => ({...prev, ...settings}));
     } catch (error) {
       console.error('Error updating AI settings:', error);
       throw error;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { AppContext } from '../App';
 import { supabase } from '../lib/supabaseClient';
@@ -11,22 +11,15 @@ import {
   LogOut, 
   Menu, 
   X,
-  Bell,
-  User as UserIcon
+  UserIcon
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { widgetSettings, user, refreshData } = useContext(AppContext);
+  const { widgetSettings, user } = useContext(AppContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
   
   const colorScheme = widgetSettings?.primary_color || '#4f46e5';
-
-  useEffect(() => {
-    // Refresh data when location changes
-    refreshData();
-  }, [location.pathname]);
 
   const handleSignOut = async () => {
     try {

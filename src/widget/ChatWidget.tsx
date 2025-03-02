@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { MessageSquare, Send, X, Loader } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
 
 // Define types
 interface ChatWidgetProps {
@@ -303,134 +302,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = '
       }
       
       // Use AI if enabled and no other reply matched
-      if (!matched && aiSettings && aiSettings.is_enabled && aiSettings.api_key) {
-        // In a real implementation, this would call the OpenAI API
-        // For now, just send a placeholder message
-        await sendMessage({
-          sender_type: 'ai',
-          message: "I'm processing your request with AI. This is a placeholder for the actual AI response."
-        });
-      } else if (!matched) {
-        // Default response if nothing matched
-        await sendMessage({
-          sender_type: 'user',
-          message: "Thanks for your message! We'll get back to you soon."
-        });
-      }
-    } catch (error: any) {
-      console.error('Error in message handling:', error);
-      setError("Failed to send message. Please try again.");
-    } finally {
-      setSending(false);
+      if (!matched && aiSettings && aiSettings.is
+      )
     }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const formatTime = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Position styling
-  const getPositionStyle = () => {
-    switch (position) {
-      case 'bottom-left':
-        return { bottom: '20px', left: '20px' };
-      case 'top-right':
-        return { top: '20px', right: '20px' };
-      case 'top-left':
-        return { top: '20px', left: '20px' };
-      case 'bottom-right':
-      default:
-        return { bottom: '20px', right: '20px' };
-    }
-  };
-
-  if (loading) {
-    return null; // Don't render anything until settings are loaded
   }
-
-  return (
-    <div className="widget-container" style={getPositionStyle()}>
-      {isOpen && (
-        <div className="chat-window">
-          <div 
-            className="chat-header flex justify-between items-center"
-            style={{ backgroundColor: settings.primary_color, color: settings.secondary_color }}
-          >
-            <span>{settings.business_name}</span>
-            <button 
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          
-          <div className="chat-messages bg-gray-50">
-            {messages.map((msg, index) => (
-              <div 
-                key={msg.id || index}
-                className={`message ${
-                  msg.sender_type === 'visitor' 
-                    ? 'user-message' 
-                    : 'bot-message'
-                }`}
-              >
-                <div>{msg.message}</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {formatTime(msg.created_at)}
-                </div>
-              </div>
-            ))}
-            {sending && (
-              <div className="flex items-center text-gray-500 text-sm mt-2">
-                <Loader size={14} className="animate-spin mr-2" />
-                <span>Typing...</span>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          {error && (
-            <div className="bg-red-100 text-red-700 p-2 text-xs">
-              Error: {error}
-            </div>
-          )}
-          
-          <div className="chat-input">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type your message..."
-              disabled={sending}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={sending || !message.trim()}
-              style={{ backgroundColor: settings.primary_color, color: settings.secondary_color }}
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-      
-      <div 
-        className="chat-button"
-        style={{ backgroundColor: settings.primary_color, color: settings.secondary_color }}
-        onClick={() => setIsOpen(true)}
-      >
-        <MessageSquare size={24} />
-      </div>
-    </div>
-  );
-};
-
-export default ChatWidget;
+}
