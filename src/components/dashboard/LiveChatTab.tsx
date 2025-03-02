@@ -18,7 +18,7 @@ const LiveChatTab = () => {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<number>(15); // seconds
+  const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesSubscription = useRef<any>(null);
@@ -27,7 +27,7 @@ const LiveChatTab = () => {
   useEffect(() => {
     // Set up refresh timer
     refreshTimer.current = setInterval(() => {
-      refreshData();
+      refreshData('chat');
     }, refreshInterval * 1000);
     
     return () => {
@@ -81,7 +81,7 @@ const LiveChatTab = () => {
   const markMessagesAsRead = async (sessionId: string) => {
     // In a real implementation, you would update a 'read' status for messages
     // For now, we'll just refresh the sessions to update the unread count
-    await refreshData();
+    await refreshData('chat');
   };
 
   const subscribeToMessages = (sessionId: string) => {
@@ -105,7 +105,7 @@ const LiveChatTab = () => {
           
           // If the message is from a visitor, refresh sessions to update unread count
           if (newMessage.sender_type === 'visitor') {
-            refreshData();
+            refreshData('chat');
           }
         }
       )
@@ -135,7 +135,7 @@ const LiveChatTab = () => {
         .eq('id', selectedSession);
       
       setReplyText('');
-      await refreshData();
+      // No need to refresh all data, the subscription will handle the new message
     } catch (error: any) {
       console.error('Error sending reply:', error);
       setError(error.message);
@@ -165,7 +165,7 @@ const LiveChatTab = () => {
         });
       
       // Refresh sessions
-      await refreshData();
+      refreshData('chat');
       
       // If this was the selected session, clear selection
       if (selectedSession === sessionId) {

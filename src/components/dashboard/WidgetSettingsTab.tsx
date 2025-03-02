@@ -1,11 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { ChromePicker } from 'react-color';
-import { supabase } from '../../lib/supabaseClient';
 import { Save, X, Palette, Building, User, MessageSquare, Copy } from 'lucide-react';
 import { AppContext } from '../../App';
 
 const WidgetSettingsTab = () => {
-  const { user, widgetSettings, refreshData, loading } = useContext(AppContext);
+  const { user, widgetSettings, updateWidgetSettings, loading } = useContext(AppContext);
   const colorScheme = widgetSettings?.primary_color || '#4f46e5';
   
   const [settings, setSettings] = useState({
@@ -52,48 +51,14 @@ const WidgetSettingsTab = () => {
         throw new Error('User not authenticated');
       }
       
-      // Use .maybeSingle() instead of .single() to avoid PGRST116 error
-      const { data, error } = await supabase
-        .from('widget_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      await updateWidgetSettings({
+        business_name: settings.business_name,
+        sales_representative: settings.sales_representative,
+        welcome_message: settings.welcome_message,
+        primary_color: settings.primary_color,
+        secondary_color: '#ffffff'
+      });
       
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        // Update existing settings
-        const { error: updateError } = await supabase
-          .from('widget_settings')
-          .update({
-            business_name: settings.business_name,
-            sales_representative: settings.sales_representative,
-            welcome_message: settings.welcome_message,
-            primary_color: settings.primary_color,
-            secondary_color: '#ffffff'
-          })
-          .eq('user_id', user.id);
-        
-        if (updateError) throw updateError;
-      } else {
-        // Insert new settings
-        const { error: insertError } = await supabase
-          .from('widget_settings')
-          .insert({
-            user_id: user.id,
-            business_name: settings.business_name,
-            sales_representative: settings.sales_representative,
-            welcome_message: settings.welcome_message,
-            primary_color: settings.primary_color,
-            secondary_color: '#ffffff'
-          });
-        
-        if (insertError) throw insertError;
-      }
-      
-      await refreshData();
       setSuccess('Widget settings saved successfully!');
     } catch (error: any) {
       console.error('Error saving settings:', error);

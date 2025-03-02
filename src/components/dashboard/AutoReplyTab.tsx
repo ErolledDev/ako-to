@@ -1,5 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { useState, useContext } from 'react';
 import { Plus, Edit, Trash2, Download, Upload, Save, X } from 'lucide-react';
 import { AppContext } from '../../App';
 
@@ -11,7 +10,16 @@ type AutoReply = {
 };
 
 const AutoReplyTab = () => {
-  const { user, autoReplies, refreshData, widgetSettings, loading } = useContext(AppContext);
+  const { 
+    user, 
+    autoReplies, 
+    addAutoReply, 
+    updateAutoReply, 
+    deleteAutoReply, 
+    widgetSettings, 
+    loading 
+  } = useContext(AppContext);
+  
   const colorScheme = widgetSettings?.primary_color || '#4f46e5';
   
   const [currentReply, setCurrentReply] = useState<AutoReply>({
@@ -64,31 +72,20 @@ const AutoReplyTab = () => {
       
       if (isEditing && currentReply.id) {
         // Update existing auto reply
-        const { error } = await supabase
-          .from('auto_replies')
-          .update({
-            keywords: replyData.keywords,
-            matching_type: replyData.matching_type,
-            response: replyData.response
-          })
-          .eq('id', currentReply.id);
-        
-        if (error) throw error;
+        await updateAutoReply(currentReply.id, {
+          keywords: replyData.keywords,
+          matching_type: replyData.matching_type,
+          response: replyData.response
+        });
       } else {
         // Insert new auto reply
-        const { error } = await supabase
-          .from('auto_replies')
-          .insert({
-            user_id: user.id,
-            keywords: replyData.keywords,
-            matching_type: replyData.matching_type,
-            response: replyData.response
-          });
-        
-        if (error) throw error;
+        await addAutoReply({
+          keywords: replyData.keywords,
+          matching_type: replyData.matching_type,
+          response: replyData.response
+        });
       }
       
-      await refreshData();
       resetForm();
       setSuccess(isEditing ? 'Auto reply updated successfully!' : 'Auto reply added successfully!');
       setShowForm(false);
@@ -111,15 +108,7 @@ const AutoReplyTab = () => {
     
     try {
       setError(null);
-      
-      const { error } = await supabase
-        .from('auto_replies')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      await refreshData();
+      await deleteAutoReply(id);
       setSuccess('Auto reply deleted successfully!');
     } catch (error: any) {
       console.error('Error deleting auto reply:', error);
@@ -190,21 +179,15 @@ const AutoReplyTab = () => {
           throw new Error('User not authenticated');
         }
         
-        // Prepare data for import
-        const dataToImport = importedData.map(item => ({
-          user_id: user.id,
-          keywords: item.keywords,
-          matching_type: item.matching_type,
-          response: item.response
-        }));
+        // Import each reply individually to update state properly
+        for (const item of importedData) {
+          await addAutoReply({
+            keywords: item.keywords,
+            matching_type: item.matching_type,
+            response: item.response
+          });
+        }
         
-        const { error } = await supabase
-          .from('auto_replies')
-          .insert(dataToImport);
-        
-        if (error) throw error;
-        
-        await refreshData();
         setSuccess('Auto replies imported successfully!');
       } catch (error: any) {
         console.error('Error importing auto replies:', error);

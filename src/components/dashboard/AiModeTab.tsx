@@ -1,10 +1,9 @@
 import { useState, useContext } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { Save, X, AlertTriangle, Bot, Key, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
 import { AppContext } from '../../App';
 
 const AiModeTab = () => {
-  const { user, aiSettings, refreshData, widgetSettings, loading } = useContext(AppContext);
+  const { user, aiSettings, updateAiSettings, widgetSettings, loading } = useContext(AppContext);
   const colorScheme = widgetSettings?.primary_color || '#4f46e5';
   
   const [settings, setSettings] = useState({
@@ -33,46 +32,13 @@ const AiModeTab = () => {
         throw new Error('User not authenticated');
       }
       
-      // Use .maybeSingle() instead of .single() to avoid PGRST116 error
-      const { data, error } = await supabase
-        .from('ai_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      await updateAiSettings({
+        is_enabled: settings.is_enabled,
+        api_key: settings.api_key,
+        model: settings.model,
+        context_info: settings.context_info
+      });
       
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        // Update existing settings
-        const { error: updateError } = await supabase
-          .from('ai_settings')
-          .update({
-            is_enabled: settings.is_enabled,
-            api_key: settings.api_key,
-            model: settings.model,
-            context_info: settings.context_info
-          })
-          .eq('user_id', user.id);
-        
-        if (updateError) throw updateError;
-      } else {
-        // Insert new settings
-        const { error: insertError } = await supabase
-          .from('ai_settings')
-          .insert({
-            user_id: user.id,
-            is_enabled: settings.is_enabled,
-            api_key: settings.api_key,
-            model: settings.model,
-            context_info: settings.context_info
-          });
-        
-        if (insertError) throw insertError;
-      }
-      
-      await refreshData();
       setSuccess('AI settings saved successfully!');
     } catch (error: any) {
       console.error('Error saving AI settings:', error);

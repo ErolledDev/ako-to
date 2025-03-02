@@ -1,5 +1,4 @@
 import { useState, useContext } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { Plus, Edit, Trash2, Download, Upload, Save, X, Link } from 'lucide-react';
 import { AppContext } from '../../App';
 
@@ -12,7 +11,16 @@ type AdvancedReply = {
 };
 
 const AdvancedReplyTab = () => {
-  const { user, advancedReplies, refreshData, widgetSettings, loading } = useContext(AppContext);
+  const { 
+    user, 
+    advancedReplies, 
+    addAdvancedReply, 
+    updateAdvancedReply, 
+    deleteAdvancedReply, 
+    widgetSettings, 
+    loading 
+  } = useContext(AppContext);
+  
   const colorScheme = widgetSettings?.primary_color || '#4f46e5';
   
   const [currentReply, setCurrentReply] = useState<AdvancedReply>({
@@ -66,33 +74,22 @@ const AdvancedReplyTab = () => {
       
       if (isEditing && currentReply.id) {
         // Update existing advanced reply
-        const { error } = await supabase
-          .from('advanced_replies')
-          .update({
-            keywords: replyData.keywords,
-            matching_type: replyData.matching_type,
-            response: replyData.response,
-            is_url: replyData.is_url
-          })
-          .eq('id', currentReply.id);
-        
-        if (error) throw error;
+        await updateAdvancedReply(currentReply.id, {
+          keywords: replyData.keywords,
+          matching_type: replyData.matching_type,
+          response: replyData.response,
+          is_url: replyData.is_url
+        });
       } else {
         // Insert new advanced reply
-        const { error } = await supabase
-          .from('advanced_replies')
-          .insert({
-            user_id: user.id,
-            keywords: replyData.keywords,
-            matching_type: replyData.matching_type,
-            response: replyData.response,
-            is_url: replyData.is_url
-          });
-        
-        if (error) throw error;
+        await addAdvancedReply({
+          keywords: replyData.keywords,
+          matching_type: replyData.matching_type,
+          response: replyData.response,
+          is_url: replyData.is_url
+        });
       }
       
-      await refreshData();
       resetForm();
       setSuccess(isEditing ? 'Advanced reply updated successfully!' : 'Advanced reply added successfully!');
       setShowForm(false);
@@ -115,15 +112,7 @@ const AdvancedReplyTab = () => {
     
     try {
       setError(null);
-      
-      const { error } = await supabase
-        .from('advanced_replies')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      await refreshData();
+      await deleteAdvancedReply(id);
       setSuccess('Advanced reply deleted successfully!');
     } catch (error: any) {
       console.error('Error deleting advanced reply:', error);
@@ -195,22 +184,16 @@ const AdvancedReplyTab = () => {
           throw new Error('User not authenticated');
         }
         
-        // Prepare data for import
-        const dataToImport = importedData.map(item => ({
-          user_id: user.id,
-          keywords: item.keywords,
-          matching_type: item.matching_type,
-          response: item.response,
-          is_url: item.is_url
-        }));
+        // Import each reply individually to update state properly
+        for (const item of importedData) {
+          await addAdvancedReply({
+            keywords: item.keywords,
+            matching_type: item.matching_type,
+            response: item.response,
+            is_url: item.is_url
+          });
+        }
         
-        const { error } = await supabase
-          .from('advanced_replies')
-          .insert(dataToImport);
-        
-        if (error) throw error;
-        
-        await refreshData();
         setSuccess('Advanced replies imported successfully!');
       } catch (error: any) {
         console.error('Error importing advanced replies:', error);
