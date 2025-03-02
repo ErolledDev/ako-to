@@ -230,6 +230,10 @@ const WidgetSettingsTab = () => {
         <div className="bg-gray-800 text-gray-200 p-3 rounded-md overflow-x-auto">
           <pre className="text-sm">{widgetCode}</pre>
         </div>
+        <p className="mt-4 text-sm text-gray-600">
+          <strong>Note:</strong> After adding this code to your website, visitors will see the chat widget in the bottom right corner.
+          You can test the widget by visiting the <a href="/widget-test.html" target="_blank" className="text-blue-600 hover:underline">demo page</a>.
+        </p>
       </div>
     </div>
   );

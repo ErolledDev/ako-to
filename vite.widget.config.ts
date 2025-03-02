@@ -22,7 +22,7 @@ export default defineConfig({
       },
       external: []
     },
-    outDir: 'dist',
+    outDir: 'public',
     emptyOutDir: false,
     sourcemap: false,
     minify: true
