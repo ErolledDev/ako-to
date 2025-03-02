@@ -5,18 +5,19 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    lib: {
-      entry: 'src/widget/chat.ts',
-      name: 'BusinessChatPlugin',
-      fileName: 'chat'
-    },
     rollupOptions: {
+      input: {
+        main: 'index.html',
+      },
       output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM'
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          ui: ['lucide-react', 'react-color']
         }
       }
-    }
+    },
+    sourcemap: false,
+    minify: true
   }
 });

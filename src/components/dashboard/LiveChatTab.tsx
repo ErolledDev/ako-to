@@ -28,7 +28,7 @@ const LiveChatTab = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<number>(30); // seconds
+  const [refreshInterval, setRefreshInterval] = useState<number>(15); // seconds
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesSubscription = useRef<any>(null);
@@ -57,6 +57,7 @@ const LiveChatTab = () => {
     if (selectedSession) {
       fetchMessages(selectedSession);
       subscribeToMessages(selectedSession);
+      markMessagesAsRead(selectedSession);
     }
   }, [selectedSession]);
 
@@ -85,7 +86,7 @@ const LiveChatTab = () => {
         // Get last message
         const { data: lastMessageData } = await supabase
           .from('chat_messages')
-          .select('message, created_at')
+          .select('message, created_at, sender_type')
           .eq('session_id', session.id)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -94,7 +95,7 @@ const LiveChatTab = () => {
           ? lastMessageData[0].message 
           : '';
         
-        // Get unread count (messages from visitor that haven't been responded to)
+        // Get unread count (messages from visitor that haven't been read)
         const { count } = await supabase
           .from('chat_messages')
           .select('*', { count: 'exact', head: true })
@@ -139,6 +140,12 @@ const LiveChatTab = () => {
     }
   };
 
+  const markMessagesAsRead = async (sessionId: string) => {
+    // In a real implementation, you would update a 'read' status for messages
+    // For now, we'll just refresh the sessions to update the unread count
+    await fetchSessions();
+  };
+
   const subscribeToMessages = (sessionId: string) => {
     if (messagesSubscription.current) {
       messagesSubscription.current.unsubscribe();
@@ -157,6 +164,11 @@ const LiveChatTab = () => {
         (payload) => {
           const newMessage = payload.new as ChatMessage;
           setMessages(prev => [...prev, newMessage]);
+          
+          // If the message is from a visitor, refresh sessions to update unread count
+          if (newMessage.sender_type === 'visitor') {
+            fetchSessions();
+          }
         }
       )
       .subscribe();

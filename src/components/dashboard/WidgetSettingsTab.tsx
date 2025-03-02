@@ -190,135 +190,108 @@ const WidgetSettingsTab = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column - Settings Form */}
-        <div className="space-y-6">
-          <div>
-            <label htmlFor="business_name" className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              <Building size={16} className="mr-2" />
-              Business Name
-            </label>
-            <input
-              type="text"
-              id="business_name"
-              name="business_name"
-              value={settings.business_name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Your Business Name"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="sales_representative" className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              <User size={16} className="mr-2" />
-              Sales Representative Name
-            </label>
-            <input
-              type="text"
-              id="sales_representative"
-              name="sales_representative"
-              value={settings.sales_representative}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Name of your sales representative"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="welcome_message" className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              <MessageSquare size={16} className="mr-2" />
-              Welcome Message
-            </label>
-            <textarea
-              id="welcome_message"
-              name="welcome_message"
-              value={settings.welcome_message}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Hello! How can I help you today?"
-            />
-          </div>
-          
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              <Palette size={16} className="mr-2" />
-              Primary Color
-            </label>
-            <div className="flex items-center">
-              <div
-                className="w-10 h-10 rounded-md cursor-pointer border border-gray-300 shadow-sm"
-                style={{ backgroundColor: settings.primary_color }}
-                onClick={() => setShowPrimaryColorPicker(!showPrimaryColorPicker)}
-              />
-              <input
-                type="text"
-                value={settings.primary_color}
-                onChange={(e) => setSettings(prev => ({ ...prev, primary_color: e.target.value }))}
-                className="ml-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            {showPrimaryColorPicker && (
-              <div className="absolute z-10 mt-2">
-                <div
-                  className="fixed inset-0"
-                  onClick={() => setShowPrimaryColorPicker(false)}
-                />
-                <ChromePicker
-                  color={settings.primary_color}
-                  onChange={(color) => setSettings(prev => ({ ...prev, primary_color: color.hex }))}
-                  disableAlpha
-                />
-              </div>
-            )}
-          </div>
-          
-          <div className="pt-4">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors"
-              style={{ backgroundColor: colorScheme }}
-            >
-              <Save size={18} className="mr-2" />
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
+      <div className="space-y-6">
+        <div>
+          <label htmlFor="business_name" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <Building size={16} className="mr-2" />
+            Business Name
+          </label>
+          <input
+            type="text"
+            id="business_name"
+            name="business_name"
+            value={settings.business_name}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Your Business Name"
+          />
         </div>
         
-        {/* Right Column - Widget Preview */}
         <div>
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 h-full">
-            <h3 className="text-lg font-medium text-gray-800 mb-6">Widget Preview</h3>
-            <div className="flex justify-center items-center h-[300px] bg-gray-100 rounded-md relative">
-              {/* Chat button */}
-              <div 
-                className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg absolute bottom-6 right-6"
-                style={{ backgroundColor: settings.primary_color, color: '#ffffff' }}
-              >
-                <MessageSquare size={24} />
-              </div>
-              
-              {/* Chat window preview */}
-              <div className="w-80 h-[250px] bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200 absolute top-6 left-1/2 transform -translate-x-1/2">
-                <div 
-                  className="px-4 py-3 font-medium"
-                  style={{ backgroundColor: settings.primary_color, color: '#ffffff' }}
-                >
-                  {settings.business_name || 'Business Chat'}
-                </div>
-                <div className="p-3 h-[200px] overflow-y-auto bg-gray-50">
-                  <div className="bg-gray-200 rounded-lg p-2 mb-2 text-sm">
-                    {settings.welcome_message || 'Hello! How can I help you today?'}
-                  </div>
-                  <div className="bg-blue-100 rounded-lg p-2 ml-auto max-w-[80%] text-sm text-right">
-                    Hi, I have a question!
-                  </div>
-                </div>
-              </div>
-            </div>
+          <label htmlFor="sales_representative" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <User size={16} className="mr-2" />
+            Sales Representative Name
+          </label>
+          <input
+            type="text"
+            id="sales_representative"
+            name="sales_representative"
+            value={settings.sales_representative}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Name of your sales representative"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="welcome_message" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <MessageSquare size={16} className="mr-2" />
+            Welcome Message
+          </label>
+          <textarea
+            id="welcome_message"
+            name="welcome_message"
+            value={settings.welcome_message}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Hello! How can I help you today?"
+          />
+        </div>
+        
+        <div>
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <Palette size={16} className="mr-2" />
+            Primary Color
+          </label>
+          <div className="flex items-center">
+            <div
+              className="w-10 h-10 rounded-md cursor-pointer border border-gray-300 shadow-sm"
+              style={{ backgroundColor: settings.primary_color }}
+              onClick={() => setShowPrimaryColorPicker(!showPrimaryColorPicker)}
+            />
+            <input
+              type="text"
+              value={settings.primary_color}
+              onChange={(e) => setSettings(prev => ({ ...prev, primary_color: e.target.value }))}
+              className="ml-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
+          {showPrimaryColorPicker && (
+            <div className="absolute z-10 mt-2">
+              <div
+                className="fixed inset-0"
+                onClick={() => setShowPrimaryColorPicker(false)}
+              />
+              <ChromePicker
+                color={settings.primary_color}
+                onChange={(color) => setSettings(prev => ({ ...prev, primary_color: color.hex }))}
+                disableAlpha
+              />
+            </div>
+          )}
+        </div>
+        
+        <div className="pt-4">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: colorScheme }}
+          >
+            <Save size={18} className="mr-2" />
+            {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+      </div>
+      
+      <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 className="text-lg font-medium text-gray-800 mb-2">Widget Installation</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Copy and paste this code just before the closing <code>&lt;/body&gt;</code> tag on your website:
+        </p>
+        <div className="bg-gray-800 text-gray-200 p-3 rounded-md overflow-x-auto">
+          <pre className="text-sm">{widgetCode}</pre>
         </div>
       </div>
     </div>

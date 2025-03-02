@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface BusinessChatPluginOptions {
   uid: string;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
 
 class BusinessChatPlugin {
@@ -12,7 +13,10 @@ class BusinessChatPlugin {
   private visitorId: string;
 
   constructor(options: BusinessChatPluginOptions) {
-    this.options = options;
+    this.options = {
+      position: 'bottom-right',
+      ...options
+    };
     
     // Generate or retrieve visitor ID
     this.visitorId = this.getOrCreateVisitorId();
@@ -44,7 +48,8 @@ class BusinessChatPlugin {
     root.render(
       ChatWidget({
         userId: this.options.uid,
-        visitorId: this.visitorId
+        visitorId: this.visitorId,
+        position: this.options.position
       })
     );
   }
