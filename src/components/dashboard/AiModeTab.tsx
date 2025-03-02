@@ -1,57 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Save, X, AlertTriangle, Bot, Key, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
+import { AppContext } from '../../App';
 
 const AiModeTab = () => {
+  const { user, aiSettings, refreshData, widgetSettings, loading } = useContext(AppContext);
+  const colorScheme = widgetSettings?.primary_color || '#4f46e5';
+  
   const [settings, setSettings] = useState({
-    is_enabled: false,
-    api_key: '',
-    model: 'gpt-3.5-turbo',
-    context_info: ''
+    is_enabled: aiSettings?.is_enabled || false,
+    api_key: aiSettings?.api_key || '',
+    model: aiSettings?.model || 'gpt-3.5-turbo',
+    context_info: aiSettings?.context_info || ''
   });
   
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAiSettings = async () => {
-      try {
-        setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) return;
-        
-        // Use .maybeSingle() instead of .single() to avoid PGRST116 error
-        const { data, error } = await supabase
-          .from('ai_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          setSettings({
-            is_enabled: data.is_enabled,
-            api_key: data.api_key,
-            model: data.model,
-            context_info: data.context_info
-          });
-        }
-      } catch (error: any) {
-        console.error('Error fetching AI settings:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchAiSettings();
-  }, []);
 
   const handleSave = async () => {
     try {
@@ -63,8 +28,6 @@ const AiModeTab = () => {
       if (settings.is_enabled && !settings.api_key) {
         throw new Error('API key is required when AI mode is enabled');
       }
-      
-      const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
@@ -109,6 +72,7 @@ const AiModeTab = () => {
         if (insertError) throw insertError;
       }
       
+      await refreshData();
       setSuccess('AI settings saved successfully!');
     } catch (error: any) {
       console.error('Error saving AI settings:', error);
@@ -170,7 +134,7 @@ const AiModeTab = () => {
             className="flex items-center focus:outline-none"
           >
             {settings.is_enabled ? (
-              <ToggleRight size={24} className="text-blue-600" />
+              <ToggleRight size={24} className="text-blue-600" style={{ color: colorScheme }} />
             ) : (
               <ToggleLeft size={24} className="text-gray-400" />
             )}
@@ -259,7 +223,8 @@ const AiModeTab = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: colorScheme }}
           >
             <Save size={18} className="mr-2" />
             {saving ? 'Saving...' : 'Save Settings'}

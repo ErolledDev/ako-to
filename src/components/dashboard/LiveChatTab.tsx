@@ -1,16 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { MessageSquare, User, Clock, RefreshCw, X, Send } from 'lucide-react';
-
-type ChatSession = {
-  id: string;
-  visitor_id: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  last_message?: string;
-  unread_count?: number;
-};
+import { AppContext } from '../../App';
 
 type ChatMessage = {
   id: string;
@@ -21,11 +12,10 @@ type ChatMessage = {
 };
 
 const LiveChatTab = () => {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const { chatSessions, refreshData, loading } = useContext(AppContext);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [replyText, setReplyText] = useState('');
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshInterval, setRefreshInterval] = useState<number>(15); // seconds
@@ -35,11 +25,9 @@ const LiveChatTab = () => {
   const refreshTimer = useRef<any>(null);
 
   useEffect(() => {
-    fetchSessions();
-    
     // Set up refresh timer
     refreshTimer.current = setInterval(() => {
-      fetchSessions();
+      refreshData();
     }, refreshInterval * 1000);
     
     return () => {
@@ -66,62 +54,12 @@ const LiveChatTab = () => {
     scrollToBottom();
   }, [messages]);
 
-  const fetchSessions = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Enhance sessions with last message and unread count
-      const enhancedSessions = await Promise.all((data || []).map(async (session) => {
-        // Get last message
-        const { data: lastMessageData } = await supabase
-          .from('chat_messages')
-          .select('message, created_at, sender_type')
-          .eq('session_id', session.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        const lastMessage = lastMessageData && lastMessageData.length > 0 
-          ? lastMessageData[0].message 
-          : '';
-        
-        // Get unread count (messages from visitor that haven't been read)
-        const { count } = await supabase
-          .from('chat_messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('session_id', session.id)
-          .eq('sender_type', 'visitor');
-        
-        return {
-          ...session,
-          last_message: lastMessage,
-          unread_count: count || 0
-        };
-      }));
-      
-      setSessions(enhancedSessions);
-      
-      // Select first session if none selected
-      if (!selectedSession && enhancedSessions.length > 0) {
-        setSelectedSession(enhancedSessions[0].id);
-      }
-    } catch (error: any) {
-      console.error('Error fetching sessions:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    // Select first session if none selected and sessions are available
+    if (!selectedSession && chatSessions.length > 0) {
+      setSelectedSession(chatSessions[0].id);
     }
-  };
+  }, [chatSessions, selectedSession]);
 
   const fetchMessages = async (sessionId: string) => {
     try {
@@ -143,7 +81,7 @@ const LiveChatTab = () => {
   const markMessagesAsRead = async (sessionId: string) => {
     // In a real implementation, you would update a 'read' status for messages
     // For now, we'll just refresh the sessions to update the unread count
-    await fetchSessions();
+    await refreshData();
   };
 
   const subscribeToMessages = (sessionId: string) => {
@@ -167,7 +105,7 @@ const LiveChatTab = () => {
           
           // If the message is from a visitor, refresh sessions to update unread count
           if (newMessage.sender_type === 'visitor') {
-            fetchSessions();
+            refreshData();
           }
         }
       )
@@ -197,6 +135,7 @@ const LiveChatTab = () => {
         .eq('id', selectedSession);
       
       setReplyText('');
+      await refreshData();
     } catch (error: any) {
       console.error('Error sending reply:', error);
       setError(error.message);
@@ -226,7 +165,7 @@ const LiveChatTab = () => {
         });
       
       // Refresh sessions
-      fetchSessions();
+      await refreshData();
       
       // If this was the selected session, clear selection
       if (selectedSession === sessionId) {
@@ -248,7 +187,7 @@ const LiveChatTab = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (loading && sessions.length === 0) {
+  if (loading) {
     return <div className="flex justify-center items-center h-64">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
     </div>;
@@ -267,13 +206,13 @@ const LiveChatTab = () => {
             </div>
           </div>
           
-          {sessions.length === 0 ? (
+          {chatSessions.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
               No active chat sessions.
             </div>
           ) : (
             <div>
-              {sessions.map((session) => (
+              {chatSessions.map((session) => (
                 <div
                   key={session.id}
                   className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
@@ -339,7 +278,7 @@ const LiveChatTab = () => {
             <>
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-medium text-gray-800">
-                  Chat with Visitor {sessions.find(s => s.id === selectedSession)?.visitor_id.substring(0, 8)}...
+                  Chat with Visitor {chatSessions.find(s => s.id === selectedSession)?.visitor_id.substring(0, 8)}...
                 </h3>
               </div>
               
@@ -383,17 +322,17 @@ const LiveChatTab = () => {
                     onKeyPress={(e) => e.key === 'Enter' && handleSendReply()}
                     placeholder="Type your reply..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={sending || !sessions.find(s => s.id === selectedSession)?.is_active}
+                    disabled={sending || !chatSessions.find(s => s.id === selectedSession)?.is_active}
                   />
                   <button
                     onClick={handleSendReply}
-                    disabled={sending || !replyText.trim() || !sessions.find(s => s.id === selectedSession)?.is_active}
+                    disabled={sending || !replyText.trim() || !chatSessions.find(s => s.id === selectedSession)?.is_active}
                     className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
                   >
                     <Send size={18} />
                   </button>
                 </div>
-                {!sessions.find(s => s.id === selectedSession)?.is_active && (
+                {!chatSessions.find(s => s.id === selectedSession)?.is_active && (
                   <div className="mt-2 text-sm text-red-600">
                     This chat session is closed. You cannot send messages.
                   </div>

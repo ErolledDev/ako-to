@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Plus, Edit, Trash2, Download, Upload, Save, X, Link } from 'lucide-react';
+import { AppContext } from '../../App';
 
 type AdvancedReply = {
   id?: string;
@@ -11,7 +12,9 @@ type AdvancedReply = {
 };
 
 const AdvancedReplyTab = () => {
-  const [advancedReplies, setAdvancedReplies] = useState<AdvancedReply[]>([]);
+  const { user, advancedReplies, refreshData, widgetSettings, loading } = useContext(AppContext);
+  const colorScheme = widgetSettings?.primary_color || '#4f46e5';
+  
   const [currentReply, setCurrentReply] = useState<AdvancedReply>({
     keywords: [],
     matching_type: 'word_match',
@@ -21,38 +24,9 @@ const AdvancedReplyTab = () => {
   const [keywordInput, setKeywordInput] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchAdvancedReplies();
-  }, []);
-
-  const fetchAdvancedReplies = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('advanced_replies')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setAdvancedReplies(data || []);
-    } catch (error: any) {
-      console.error('Error fetching advanced replies:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     try {
@@ -64,7 +38,7 @@ const AdvancedReplyTab = () => {
       if (keywordInput.trim() !== '') {
         setCurrentReply(prev => ({
           ...prev,
-          keywords: [...prev.keywords, keywordInput.trim()]
+          keywords : [...prev.keywords, keywordInput.trim()]
         }));
         setKeywordInput('');
       }
@@ -77,8 +51,6 @@ const AdvancedReplyTab = () => {
       if (currentReply.response.trim() === '') {
         throw new Error('Response cannot be empty');
       }
-      
-      const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
@@ -120,7 +92,7 @@ const AdvancedReplyTab = () => {
         if (error) throw error;
       }
       
-      await fetchAdvancedReplies();
+      await refreshData();
       resetForm();
       setSuccess(isEditing ? 'Advanced reply updated successfully!' : 'Advanced reply added successfully!');
       setShowForm(false);
@@ -151,7 +123,7 @@ const AdvancedReplyTab = () => {
       
       if (error) throw error;
       
-      await fetchAdvancedReplies();
+      await refreshData();
       setSuccess('Advanced reply deleted successfully!');
     } catch (error: any) {
       console.error('Error deleting advanced reply:', error);
@@ -219,8 +191,6 @@ const AdvancedReplyTab = () => {
           throw new Error('Invalid import format');
         }
         
-        const { data: { user } } = await supabase.auth.getUser();
-        
         if (!user) {
           throw new Error('User not authenticated');
         }
@@ -240,7 +210,7 @@ const AdvancedReplyTab = () => {
         
         if (error) throw error;
         
-        await fetchAdvancedReplies();
+        await refreshData();
         setSuccess('Advanced replies imported successfully!');
       } catch (error: any) {
         console.error('Error importing advanced replies:', error);
@@ -264,6 +234,7 @@ const AdvancedReplyTab = () => {
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            style={{ backgroundColor: colorScheme }}
           >
             <Plus size={18} className="mr-2" />
             Add Advanced Reply
@@ -390,6 +361,7 @@ const AdvancedReplyTab = () => {
                 onClick={handleSave}
                 disabled={saving}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+                style={{ backgroundColor: colorScheme }}
               >
                 <Save size={18} className="mr-2" />
                 {saving ? 'Saving...' : 'Save Reply'}
@@ -490,6 +462,7 @@ const AdvancedReplyTab = () => {
                     <button
                       onClick={() => handleEdit(reply)}
                       className="text-blue-600 hover:text-blue-800 mr-4 inline-flex items-center"
+                      style={{ color: colorScheme }}
                     >
                       <Edit size={16} className="mr-1" />
                       Edit

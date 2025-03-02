@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { ChromePicker } from 'react-color';
 import { supabase } from '../../lib/supabaseClient';
 import { Save, X, Palette, Building, User, MessageSquare, Copy } from 'lucide-react';
-import { useOutletContext } from 'react-router-dom';
+import { AppContext } from '../../App';
 
 const WidgetSettingsTab = () => {
-  const { colorScheme } = useOutletContext<{ colorScheme: string }>();
+  const { user, widgetSettings, refreshData, loading } = useContext(AppContext);
+  const colorScheme = widgetSettings?.primary_color || '#4f46e5';
+  
   const [settings, setSettings] = useState({
     business_name: '',
     sales_representative: '',
     welcome_message: 'Hello! How can I help you today?',
-    primary_color: colorScheme || '#4f46e5',
+    primary_color: colorScheme,
   });
   
   const [showPrimaryColorPicker, setShowPrimaryColorPicker] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -22,62 +23,30 @@ const WidgetSettingsTab = () => {
   const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) return;
-        
-        setWidgetCode(`<script src="https://widget-chat-app.netlify.app/chat.js"></script>
+    if (widgetSettings) {
+      setSettings({
+        business_name: widgetSettings.business_name || '',
+        sales_representative: widgetSettings.sales_representative || '',
+        welcome_message: widgetSettings.welcome_message || 'Hello! How can I help you today?',
+        primary_color: widgetSettings.primary_color || colorScheme,
+      });
+    }
+    
+    if (user) {
+      setWidgetCode(`<script src="https://widget-chat-app.netlify.app/chat.js"></script>
 <script>
   new BusinessChatPlugin({
     uid: '${user.id}'
   });
 </script>`);
-        
-        // Use .maybeSingle() instead of .single() to avoid PGRST116 error
-        const { data, error } = await supabase
-          .from('widget_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          setSettings({
-            business_name: data.business_name,
-            sales_representative: data.sales_representative,
-            welcome_message: data.welcome_message,
-            primary_color: data.primary_color,
-          });
-        } else {
-          // If no settings exist yet, use the global color scheme
-          setSettings(prev => ({
-            ...prev,
-            primary_color: colorScheme
-          }));
-        }
-      } catch (error: any) {
-        console.error('Error fetching settings:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchSettings();
-  }, [colorScheme]);
+    }
+  }, [widgetSettings, user, colorScheme]);
 
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
       setSuccess(null);
-      
-      const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
@@ -124,6 +93,7 @@ const WidgetSettingsTab = () => {
         if (insertError) throw insertError;
       }
       
+      await refreshData();
       setSuccess('Widget settings saved successfully!');
     } catch (error: any) {
       console.error('Error saving settings:', error);

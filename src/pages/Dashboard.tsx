@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { AppContext } from '../App';
 import { 
   Settings, 
   MessageSquare, 
@@ -9,36 +9,22 @@ import {
   MessageCircle, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  Bell,
+  User as UserIcon
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const [colorScheme, setColorScheme] = useState('#4f46e5');
+  const { widgetSettings, user, refreshData } = useContext(AppContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
   
+  const colorScheme = widgetSettings?.primary_color || '#4f46e5';
+
   useEffect(() => {
-    const fetchColorScheme = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) return;
-        
-        const { data } = await supabase
-          .from('widget_settings')
-          .select('primary_color')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (data && data.primary_color) {
-          setColorScheme(data.primary_color);
-        }
-      } catch (error) {
-        console.error('Error fetching color scheme:', error);
-      }
-    };
-    
-    fetchColorScheme();
+    // Refresh data when location changes
+    refreshData();
   }, [location.pathname]);
 
   const handleSignOut = async () => {
@@ -58,9 +44,9 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
@@ -70,13 +56,37 @@ const Dashboard = () => {
             </div>
             
             <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition"
-              >
-                <LogOut size={16} className="mr-2" />
-                Sign Out
-              </button>
+              <div className="relative">
+                <button 
+                  className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  aria-label="Notifications"
+                >
+                  <Bell size={20} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <UserIcon size={16} className="text-gray-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{user?.email}</span>
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="-mr-2 flex items-center md:hidden">
@@ -103,9 +113,14 @@ const Dashboard = () => {
                 className={({ isActive }) => 
                   `flex items-center px-4 py-2 text-base font-medium ${
                     isActive 
-                      ? 'text-blue-600 bg-blue-50' 
+                      ? 'text-white' 
                       : 'text-gray-600 hover:bg-gray-50'
                   }`
+                }
+                style={({ isActive }) => 
+                  isActive 
+                    ? { backgroundColor: colorScheme } 
+                    : {}
                 }
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -155,6 +170,24 @@ const Dashboard = () => {
                 </NavLink>
               ))}
             </nav>
+            
+            <div className="mt-auto p-4 border-t border-gray-200">
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                  <UserIcon size={16} className="text-gray-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700 truncate">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="mt-4 w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <LogOut size={16} className="mr-2" />
+                Sign Out
+              </button>
+            </div>
           </div>
           
           {/* Main content */}
