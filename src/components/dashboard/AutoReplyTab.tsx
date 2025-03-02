@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Plus, Edit, Trash2, Download, Upload, Save, X } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 
 type AutoReply = {
   id?: string;
@@ -10,6 +11,7 @@ type AutoReply = {
 };
 
 const AutoReplyTab = () => {
+  const { colorScheme } = useOutletContext<{ colorScheme: string }>();
   const [autoReplies, setAutoReplies] = useState<AutoReply[]>([]);
   const [currentReply, setCurrentReply] = useState<AutoReply>({
     keywords: [],
@@ -257,7 +259,8 @@ const AutoReplyTab = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors"
+            style={{ backgroundColor: colorScheme }}
           >
             <Plus size={18} className="mr-2" />
             Add Auto Reply
@@ -369,7 +372,8 @@ const AutoReplyTab = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+                className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+                style={{ backgroundColor: colorScheme }}
               >
                 <Save size={18} className="mr-2" />
                 {saving ? 'Saving...' : 'Save Reply'}
@@ -460,6 +464,7 @@ const AutoReplyTab = () => {
                     <button
                       onClick={() => handleEdit(reply)}
                       className="text-blue-600 hover:text-blue-800 mr-4 inline-flex items-center"
+                      style={{ color: colorScheme }}
                     >
                       <Edit size={16} className="mr-1" />
                       Edit

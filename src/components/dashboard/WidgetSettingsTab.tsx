@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { ChromePicker } from 'react-color';
 import { supabase } from '../../lib/supabaseClient';
 import { Save, X, Palette, Building, User, MessageSquare } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 
 const WidgetSettingsTab = () => {
+  const { colorScheme } = useOutletContext<{ colorScheme: string }>();
   const [settings, setSettings] = useState({
     business_name: '',
     sales_representative: '',
     welcome_message: 'Hello! How can I help you today?',
-    primary_color: '#4f46e5',
+    primary_color: colorScheme || '#4f46e5',
     secondary_color: '#ffffff'
   });
   
@@ -45,6 +47,12 @@ const WidgetSettingsTab = () => {
             primary_color: data.primary_color,
             secondary_color: data.secondary_color
           });
+        } else {
+          // If no settings exist yet, use the global color scheme
+          setSettings(prev => ({
+            ...prev,
+            primary_color: colorScheme
+          }));
         }
       } catch (error: any) {
         console.error('Error fetching settings:', error);
@@ -55,7 +63,7 @@ const WidgetSettingsTab = () => {
     };
     
     fetchSettings();
-  }, []);
+  }, [colorScheme]);
 
   const handleSave = async () => {
     try {
@@ -239,6 +247,7 @@ const WidgetSettingsTab = () => {
                 <ChromePicker
                   color={settings.primary_color}
                   onChange={(color) => setSettings(prev => ({ ...prev, primary_color: color.hex }))}
+                  disableAlpha
                 />
               </div>
             )}
@@ -271,6 +280,7 @@ const WidgetSettingsTab = () => {
                 <ChromePicker
                   color={settings.secondary_color}
                   onChange={(color) => setSettings(prev => ({ ...prev, secondary_color: color.hex }))}
+                  disableAlpha
                 />
               </div>
             )}
@@ -281,7 +291,8 @@ const WidgetSettingsTab = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            className="flex items-center px-4 py-2 text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            style={{ backgroundColor: colorScheme }}
           >
             <Save size={18} className="mr-2" />
             {saving ? 'Saving...' : 'Save Settings'}

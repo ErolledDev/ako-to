@@ -1,32 +1,89 @@
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Settings, MessageSquare, Bot, Zap, Users, Copy, LogOut } from 'lucide-react';
+import { 
+  Settings, 
+  MessageSquare, 
+  Bot, 
+  Zap, 
+  Users, 
+  Copy, 
+  LogOut,
+  Menu,
+  X,
+  Code
+} from 'lucide-react';
+import { AppContext } from '../App';
+import { ChromePicker } from 'react-color';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useContext(AppContext);
   const [widgetCode, setWidgetCode] = useState<string>('');
   const [codeCopied, setCodeCopied] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [colorScheme, setColorScheme] = useState('#4f46e5');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [widgetSettings, setWidgetSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        setWidgetCode(`<script src="https://widget-chat-app.netlify.app/chat.js"></script>
+    if (user) {
+      setWidgetCode(`<script src="https://widget-chat-app.netlify.app/chat.js"></script>
 <script>
   new BusinessChatPlugin({
     uid: '${user.id}'
   });
 </script>`);
+      
+      fetchWidgetSettings();
+    }
+    
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
       }
     };
     
-    getUser();
-  }, []);
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [user]);
+
+  const fetchWidgetSettings = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('widget_settings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching widget settings:', error);
+        return;
+      }
+      
+      if (data) {
+        setWidgetSettings(data);
+        setColorScheme(data.primary_color);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -37,6 +94,27 @@ const Dashboard = () => {
     navigator.clipboard.writeText(widgetCode);
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleColorChange = async (color: any) => {
+    setColorScheme(color.hex);
+    
+    if (!widgetSettings) return;
+    
+    try {
+      const { error } = await supabase
+        .from('widget_settings')
+        .update({
+          primary_color: color.hex
+        })
+        .eq('user_id', user?.id);
+      
+      if (error) {
+        console.error('Error updating color scheme:', error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const tabs = [
@@ -50,63 +128,123 @@ const Dashboard = () => {
   const currentTab = location.pathname.split('/').pop() || '';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Business Chat Dashboard</h1>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-          >
-            <LogOut size={18} className="mr-2" />
-            Sign Out
-          </button>
+      <header className="bg-white shadow-sm z-10">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            {isMobile && (
+              <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            )}
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Business Chat Dashboard</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                className="flex items-center px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50"
+                style={{ color: colorScheme }}
+              >
+                <span className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: colorScheme }}></span>
+                Theme
+              </button>
+              {showColorPicker && (
+                <div className="absolute right-0 mt-2 z-10">
+                  <div 
+                    className="fixed inset-0" 
+                    onClick={() => setShowColorPicker(false)}
+                  ></div>
+                  <div className="relative">
+                    <ChromePicker 
+                      color={colorScheme} 
+                      onChange={handleColorChange}
+                      disableAlpha
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              <LogOut size={18} className="mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Widget Code Section */}
-        <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium mb-4 text-gray-800">Your Widget Installation Code</h2>
-          <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">{widgetCode}</pre>
-          </div>
-          <button
-            onClick={copyWidgetCode}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <Copy size={18} className="mr-2" />
-            {codeCopied ? 'Copied!' : 'Copy Code'}
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="border-b border-gray-200">
-            <nav className="flex">
-              {tabs.map((tab) => (
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside 
+          className={`bg-white shadow-md z-20 ${
+            sidebarOpen 
+              ? 'fixed inset-y-0 left-0 w-64 transform translate-x-0 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out'
+              : 'fixed inset-y-0 left-0 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out'
+          }`}
+          style={{ marginTop: isMobile ? '64px' : '0' }}
+        >
+          <div className="h-full flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                <h3 className="text-sm font-medium mb-2 text-gray-700">Widget Code</h3>
+                <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono bg-gray-100 p-2 rounded">{widgetCode}</pre>
                 <button
-                  key={tab.path}
-                  onClick={() => navigate(`/dashboard/${tab.path}`)}
-                  className={`flex items-center px-6 py-4 text-sm font-medium ${
-                    currentTab === tab.path
-                      ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  }`}
+                  onClick={copyWidgetCode}
+                  className="flex items-center mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm w-full justify-center"
+                  style={{ backgroundColor: colorScheme, color: 'white' }}
                 >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
+                  <Copy size={14} className="mr-1" />
+                  {codeCopied ? 'Copied!' : 'Copy Code'}
                 </button>
-              ))}
+              </div>
+            </div>
+            
+            <nav className="flex-1 overflow-y-auto py-4">
+              <ul className="space-y-1 px-2">
+                {tabs.map((tab) => (
+                  <li key={tab.path}>
+                    <Link
+                      to={`/dashboard/${tab.path}`}
+                      className={`flex items-center px-4 py-3 rounded-md text-sm font-medium ${
+                        currentTab === tab.path
+                          ? 'text-white'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                      style={{ 
+                        backgroundColor: currentTab === tab.path ? colorScheme : 'transparent',
+                        color: currentTab === tab.path ? 'white' : 'inherit'
+                      }}
+                    >
+                      <span className="mr-3">{tab.icon}</span>
+                      {tab.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </nav>
+            
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex items-center text-sm text-gray-500">
+                <Code size={14} className="mr-2" />
+                <span>v0.1.0</span>
+              </div>
+            </div>
           </div>
-          
-          {/* Tab Content */}
-          <div className="p-0">
-            <Outlet />
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="max-w-5xl mx-auto">
+            <Outlet context={{ colorScheme }} />
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
