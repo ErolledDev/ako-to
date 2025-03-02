@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface ChatWidgetProps {
   userId: string;
   visitorId: string;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
 
 interface WidgetSettings {
@@ -29,7 +30,7 @@ const supabaseUrl = 'https://drxjazbhjumeezoifcmq.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeGphemJoanVtZWV6b2lmY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA4NDg2NjcsImV4cCI6MjA1NjQyNDY2N30.3O8fxkGWv88Ydo_80hO0S2Qz88T4WKNIosOf1UNeyeA';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = 'bottom-right' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -44,6 +45,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesSubscription = useRef<any>(null);
@@ -103,12 +105,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
       
       if (storedSessionId) {
         // Verify if session exists and is active
-        const { data: sessionData } = await supabase
+        const { data: sessionData, error: sessionError } = await supabase
           .from('chat_sessions')
           .select('*')
           .eq('id', storedSessionId)
           .eq('is_active', true)
           .maybeSingle();
+        
+        if (sessionError) throw sessionError;
         
         if (sessionData) {
           setSessionId(storedSessionId);
@@ -133,6 +137,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
       localStorage.setItem(`chat_session_${userId}`, data.id);
     } catch (error) {
       console.error('Error initializing chat session:', error);
+      // Retry with exponential backoff if needed
+      if (retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          initializeSession();
+        }, 1000 * Math.pow(2, retryCount));
+      }
     }
   };
 
@@ -210,6 +221,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
         .eq('id', sessionId);
     } catch (error) {
       console.error('Error sending message:', error);
+      throw error; // Re-throw to handle in the calling function
     }
   };
 
@@ -229,23 +241,29 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
       setMessage('');
       
       // Check for auto replies
-      const { data: autoReplies } = await supabase
+      const { data: autoReplies, error: autoRepliesError } = await supabase
         .from('auto_replies')
         .select('*')
         .eq('user_id', userId);
       
+      if (autoRepliesError) throw autoRepliesError;
+      
       // Check for advanced replies
-      const { data: advancedReplies } = await supabase
+      const { data: advancedReplies, error: advancedRepliesError } = await supabase
         .from('advanced_replies')
         .select('*')
         .eq('user_id', userId);
       
+      if (advancedRepliesError) throw advancedRepliesError;
+      
       // Check for AI settings
-      const { data: aiSettings } = await supabase
+      const { data: aiSettings, error: aiSettingsError } = await supabase
         .from('ai_settings')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
+      
+      if (aiSettingsError) throw aiSettingsError;
       
       // Simple keyword matching (can be improved)
       let matched = false;
@@ -301,7 +319,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
       }
     } catch (error: any) {
       console.error('Error in message handling:', error);
-      setError(error.message);
+      setError("Failed to send message. Please try again.");
     } finally {
       setSending(false);
     }
@@ -317,12 +335,27 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Position styling
+  const getPositionStyle = () => {
+    switch (position) {
+      case 'bottom-left':
+        return { bottom: '20px', left: '20px' };
+      case 'top-right':
+        return { top: '20px', right: '20px' };
+      case 'top-left':
+        return { top: '20px', left: '20px' };
+      case 'bottom-right':
+      default:
+        return { bottom: '20px', right: '20px' };
+    }
+  };
+
   if (loading) {
     return null; // Don't render anything until settings are loaded
   }
 
   return (
-    <div className="widget-container">
+    <div className="widget-container" style={getPositionStyle()}>
       {isOpen && (
         <div className="chat-window">
           <div 
