@@ -21,10 +21,10 @@
   <p>This is a simple demo page for the Business Chat Widget. You should see a chat button in the bottom right corner.</p>
   
   <!-- Load the widget -->
-  <script src="/chat.js"></script>
+  <script src="./chat.js"></script>
   <script>
-    // Wait for the script to load
-    setTimeout(() => {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if BusinessChatPlugin is available
       if (typeof BusinessChatPlugin === 'function') {
         new BusinessChatPlugin({
           uid: '00000000-0000-0000-0000-000000000000' // Demo user ID
@@ -32,7 +32,7 @@
       } else {
         console.error('BusinessChatPlugin not loaded correctly');
       }
-    }, 1000);
+    });
   </script>
 </body>
 </html>

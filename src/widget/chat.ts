@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import React from 'react';
 import ChatWidget from './ChatWidget';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -46,7 +47,7 @@ class BusinessChatPlugin {
     // Render the widget
     const root = createRoot(this.container);
     root.render(
-      ChatWidget({
+      React.createElement(ChatWidget, {
         userId: this.options.uid,
         visitorId: this.visitorId,
         position: this.options.position
