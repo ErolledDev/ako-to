@@ -97,14 +97,16 @@
   <script src="./chat.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if BusinessChatPlugin is available
-      if (typeof BusinessChatPlugin === 'function') {
-        new BusinessChatPlugin({
-          uid: '00000000-0000-0000-0000-000000000000' // Demo user ID
-        });
-      } else {
-        console.error('BusinessChatPlugin not loaded correctly');
-      }
+      setTimeout(function() {
+        // Check if BusinessChatPlugin is available
+        if (typeof BusinessChatPlugin === 'function') {
+          new BusinessChatPlugin({
+            uid: '00000000-0000-0000-0000-000000000000' // Demo user ID
+          });
+        } else {
+          console.error('BusinessChatPlugin not loaded correctly');
+        }
+      }, 500); // Small delay to ensure script is loaded
     });
   </script>
 </body>

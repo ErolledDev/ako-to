@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Chat Widget Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #4f46e5;
+    }
+  </style>
+</head>
+<body>
+  <h1>Business Chat Widget Demo</h1>
+  <p>This is a simple demo page for the Business Chat Widget. You should see a chat button in the bottom right corner.</p>
+  
+  <!-- Load the widget -->
+  <script src="./chat.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        // Check if BusinessChatPlugin is available
+        if (typeof BusinessChatPlugin === 'function') {
+          new BusinessChatPlugin({
+            uid: '00000000-0000-0000-0000-000000000000' // Demo user ID
+          });
+        } else {
+          console.error('BusinessChatPlugin not loaded correctly');
+        }
+      }, 500); // Small delay to ensure script is loaded
+    });
+  </script>
+</body>
+</html>
