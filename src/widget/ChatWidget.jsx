@@ -2,52 +2,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { MessageSquare, Send, X, Loader } from 'lucide-react';
 
-// Define types
-interface ChatWidgetProps {
-  userId: string;
-  visitorId: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-}
-
-interface WidgetSettings {
-  business_name: string;
-  sales_representative: string;
-  welcome_message: string;
-  primary_color: string;
-  secondary_color: string;
-}
-
-interface ChatMessage {
-  id?: string;
-  sender_type: 'user' | 'visitor' | 'ai' | 'auto_reply' | 'advanced_reply';
-  message: string;
-  created_at?: string;
-}
-
 // Create Supabase client
 const supabaseUrl = 'https://drxjazbhjumeezoifcmq.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeGphemJoanVtZWV6b2lmY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA4NDg2NjcsImV4cCI6MjA1NjQyNDY2N30.3O8fxkGWv88Ydo_80hO0S2Qz88T4WKNIosOf1UNeyeA';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = 'bottom-right' }) => {
+const ChatWidget = ({ userId, visitorId, position = 'bottom-right' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [settings, setSettings] = useState<WidgetSettings>({
+  const [messages, setMessages] = useState([]);
+  const [settings, setSettings] = useState({
     business_name: 'Business Chat',
     sales_representative: '',
     welcome_message: 'Hello! How can I help you today?',
     primary_color: '#4f46e5',
     secondary_color: '#ffffff'
   });
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesSubscription = useRef<any>(null);
+  const messagesEndRef = useRef(null);
+  const messagesSubscription = useRef(null);
 
   useEffect(() => {
     fetchWidgetSettings();
@@ -162,7 +140,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = '
         setMessages(data);
       } else {
         // Add welcome message if no messages exist
-        const welcomeMessage: ChatMessage = {
+        const welcomeMessage = {
           sender_type: 'user',
           message: settings.welcome_message
         };
@@ -192,14 +170,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = '
           filter: `session_id=eq.${sessionId}`
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage;
+          const newMessage = payload.new;
           setMessages(prev => [...prev, newMessage]);
         }
       )
       .subscribe();
   };
 
-  const sendMessage = async (msg: ChatMessage) => {
+  const sendMessage = async (msg) => {
     if (!sessionId) return;
     
     try {
@@ -316,7 +294,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ userId, visitorId, position = '
           message: "Thanks for your message! We'll get back to you soon."
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error handling message:', error);
       setError('Failed to send message. Please try again.');
     } finally {
