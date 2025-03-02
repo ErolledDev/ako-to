@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChromePicker } from 'react-color';
 import { supabase } from '../../lib/supabaseClient';
+import { Save, X, Palette, Building, User, MessageSquare } from 'lucide-react';
 
 const WidgetSettingsTab = () => {
   const [settings, setSettings] = useState({
@@ -124,28 +125,47 @@ const WidgetSettingsTab = () => {
   };
 
   if (loading) {
-    return <div>Loading settings...</div>;
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-6">Widget Settings</h2>
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800">Widget Settings</h2>
+      </div>
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <X size={20} className="text-red-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">{error}</p>
+            </div>
+          </div>
         </div>
       )}
       
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Save size={20} className="text-green-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">{success}</p>
+            </div>
+          </div>
         </div>
       )}
       
       <div className="space-y-6">
         <div>
-          <label htmlFor="business_name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="business_name" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <Building size={16} className="mr-2" />
             Business Name
           </label>
           <input
@@ -160,7 +180,8 @@ const WidgetSettingsTab = () => {
         </div>
         
         <div>
-          <label htmlFor="sales_representative" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="sales_representative" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <User size={16} className="mr-2" />
             Sales Representative Name
           </label>
           <input
@@ -175,7 +196,8 @@ const WidgetSettingsTab = () => {
         </div>
         
         <div>
-          <label htmlFor="welcome_message" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="welcome_message" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+            <MessageSquare size={16} className="mr-2" />
             Welcome Message
           </label>
           <textarea
@@ -191,12 +213,13 @@ const WidgetSettingsTab = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              <Palette size={16} className="mr-2" />
               Primary Color
             </label>
             <div className="flex items-center">
               <div
-                className="w-10 h-10 rounded-md cursor-pointer border border-gray-300"
+                className="w-10 h-10 rounded-md cursor-pointer border border-gray-300 shadow-sm"
                 style={{ backgroundColor: settings.primary_color }}
                 onClick={() => setShowPrimaryColorPicker(!showPrimaryColorPicker)}
               />
@@ -222,12 +245,13 @@ const WidgetSettingsTab = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              <Palette size={16} className="mr-2" />
               Secondary Color
             </label>
             <div className="flex items-center">
               <div
-                className="w-10 h-10 rounded-md cursor-pointer border border-gray-300"
+                className="w-10 h-10 rounded-md cursor-pointer border border-gray-300 shadow-sm"
                 style={{ backgroundColor: settings.secondary_color }}
                 onClick={() => setShowSecondaryColorPicker(!showSecondaryColorPicker)}
               />
@@ -257,10 +281,44 @@ const WidgetSettingsTab = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
           >
+            <Save size={18} className="mr-2" />
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
+        </div>
+      </div>
+      
+      <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h3 className="text-lg font-medium text-blue-800 mb-2">Widget Preview</h3>
+        <div className="flex justify-center p-4 bg-gray-100 rounded-md">
+          <div className="relative">
+            {/* Chat button */}
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: settings.primary_color, color: settings.secondary_color }}
+            >
+              <MessageSquare size={24} />
+            </div>
+            
+            {/* Chat window preview */}
+            <div className="absolute bottom-16 right-0 w-72 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
+              <div 
+                className="px-4 py-3 font-medium"
+                style={{ backgroundColor: settings.primary_color, color: settings.secondary_color }}
+              >
+                {settings.business_name || 'Business Chat'}
+              </div>
+              <div className="p-3 max-h-32 overflow-y-auto bg-gray-50">
+                <div className="bg-gray-200 rounded-lg p-2 mb-2 text-sm">
+                  {settings.welcome_message || 'Hello! How can I help you today?'}
+                </div>
+                <div className="bg-blue-100 rounded-lg p-2 ml-auto max-w-[80%] text-sm text-right">
+                  Hi, I have a question!
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

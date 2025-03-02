@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { Save, X, AlertTriangle, Bot, Key, FileText, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const AiModeTab = () => {
   const [settings, setSettings] = useState({
@@ -125,42 +126,65 @@ const AiModeTab = () => {
   };
 
   if (loading) {
-    return <div>Loading AI settings...</div>;
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-6">AI Mode Settings</h2>
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800">AI Mode Settings</h2>
+      </div>
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <X size={20} className="text-red-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">{error}</p>
+            </div>
+          </div>
         </div>
       )}
       
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Save size={20} className="text-green-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">{success}</p>
+            </div>
+          </div>
         </div>
       )}
       
       <div className="space-y-6">
         <div className="flex items-center">
-          <input
-            id="is_enabled"
-            name="is_enabled"
-            type="checkbox"
-            checked={settings.is_enabled}
-            onChange={handleChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="is_enabled" className="ml-2 block text-sm font-medium text-gray-700">
-            Enable AI Mode
-          </label>
+          <button
+            onClick={() => setSettings(prev => ({ ...prev, is_enabled: !prev.is_enabled }))}
+            className="flex items-center focus:outline-none"
+          >
+            {settings.is_enabled ? (
+              <ToggleRight size={24} className="text-blue-600" />
+            ) : (
+              <ToggleLeft size={24} className="text-gray-400" />
+            )}
+            <span className="ml-2 text-sm font-medium text-gray-700">
+              {settings.is_enabled ? 'AI Mode Enabled' : 'AI Mode Disabled'}
+            </span>
+          </button>
         </div>
         
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
           <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertTriangle size={20} className="text-yellow-500" />
+            </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
                 <strong>How AI Mode works:</strong> AI will only respond if no keywords match in Auto Reply or Advanced Reply. 
@@ -172,7 +196,8 @@ const AiModeTab = () => {
         
         <div className={settings.is_enabled ? '' : 'opacity-50 pointer-events-none'}>
           <div>
-            <label htmlFor="api_key" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="api_key" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              <Key size={16} className="mr-2" />
               AI API Key
             </label>
             <input
@@ -191,7 +216,8 @@ const AiModeTab = () => {
           </div>
           
           <div className="mt-4">
-            <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="model" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              <Bot size={16} className="mr-2" />
               AI Model
             </label>
             <select
@@ -209,7 +235,8 @@ const AiModeTab = () => {
           </div>
           
           <div className="mt-4">
-            <label htmlFor="context_info" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="context_info" className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              <FileText size={16} className="mr-2" />
               Business Context Information
             </label>
             <textarea
@@ -232,8 +259,9 @@ const AiModeTab = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
           >
+            <Save size={18} className="mr-2" />
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
